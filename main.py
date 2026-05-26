@@ -1,7 +1,7 @@
 import time
 
 from data.data_provider import get_market_data
-from features.feature_engine import create_features
+from features.feature_engine import add_features as create_features
 from candlestick.detector import detect_all
 from strategy.signal_engine import generate_signal
 
