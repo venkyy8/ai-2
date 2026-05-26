@@ -1,0 +1,41 @@
+# =========================
+# CORE DATA & ANALYSIS
+# =========================
+pandas
+numpy
+scipy
+
+# =========================
+# MARKET DATA (FREE API)
+# =========================
+yfinance
+
+# =========================
+# MACHINE LEARNING
+# =========================
+scikit-learn
+joblib
+
+# =========================
+# TECHNICAL ANALYSIS
+# =========================
+ta
+pandas-ta
+
+# =========================
+# VISUALIZATION (optional but useful)
+# =========================
+matplotlib
+
+# =========================
+# BACKTESTING SUPPORT
+# =========================
+vectorbt
+
+# =========================
+# PERFORMANCE / UTILITIES
+# =========================
+tqdm
+pandas
+numpy
+scikit-learn
