@@ -1,0 +1,13 @@
+STOCKS = [
+    "RELIANCE.NS",
+    "TCS.NS",
+    "INFY.NS",
+    "HDFCBANK.NS",
+    "ICICIBANK.NS"
+]
+
+INTERVAL = "5m"
+PERIOD = "5d"
+
+BUY_THRESHOLD = 75
+SELL_THRESHOLD = 75

@@ -1,85 +1,76 @@
-import time
-
+from config import STOCKS, INTERVAL, PERIOD
 from data.data_provider import get_market_data
-from features.feature_engine import add_features as create_features
-from candlestick.detector import detect_all
-from strategy.signal_engine import generate_signal
+from indicators.technicals import add_indicators
+from indicators.candlestick import detect_candle
+from intelligence.decision_engine import generate_signal
+from intelligence.risk_engine import calculate_levels
+from learning.memory import save_trade
 
 
-print("🚀 AI Trader Started (CLEAN SIGNAL MODE)")
+def scan():
+    buy_list = []
+    sell_list = []
+
+    for symbol in STOCKS:
+        try:
+            df = get_market_data(symbol, INTERVAL, PERIOD)
+
+            if df is None:
+                continue
+
+            df = add_indicators(df)
+
+            latest = df.iloc[-1]
+
+            signal, confidence = generate_signal(
+                latest["rsi"],
+                latest["ema_fast"],
+                latest["ema_slow"],
+                latest["volume_spike"]
+            )
+
+            price = latest["close"]
+            sl, target = calculate_levels(price)
+
+            result = {
+                "symbol": symbol,
+                "signal": signal,
+                "confidence": confidence,
+                "price": price,
+                "sl": sl,
+                "target": target,
+                "candle": detect_candle(df)
+            }
+
+            save_trade(result)
+
+            if signal == "BUY":
+                buy_list.append(result)
+
+            elif signal == "SELL":
+                sell_list.append(result)
+
+        except Exception:
+            continue
+
+    print("\n========== BUY SIGNALS ==========")
+    for stock in buy_list:
+        print(
+            f"{stock['symbol']} | "
+            f"₹{stock['price']:.2f} | "
+            f"Confidence: {stock['confidence']}% | "
+            f"SL: ₹{stock['sl']} | "
+            f"Target: ₹{stock['target']}"
+        )
+
+    print("\n========== SELL SIGNALS ==========")
+    for stock in sell_list:
+        print(
+            f"{stock['symbol']} | "
+            f"₹{stock['price']:.2f} | "
+            f"Confidence: {stock['confidence']}%"
+        )
 
 
-WATCHLIST = [
-    "RELIANCE.NS", "TCS.NS", "INFY.NS", "HDFCBANK.NS", "ICICIBANK.NS",
-    "SBIN.NS", "BHARTIARTL.NS", "ITC.NS", "LT.NS", "KOTAKBANK.NS",
-
-    "AXISBANK.NS", "INDUSINDBK.NS", "BAJFINANCE.NS", "BAJAJFINSV.NS",
-    "FEDERALBNK.NS", "PNB.NS", "BANKBARODA.NS", "IDFCFIRSTB.NS",
-
-    "WIPRO.NS", "HCLTECH.NS", "TECHM.NS", "LTIM.NS", "PERSISTENT.NS",
-
-    "MARUTI.NS", "TATAMOTORS.NS", "M&M.NS", "EICHERMOT.NS", "BAJAJ-AUTO.NS",
-
-    "TATASTEEL.NS", "JSWSTEEL.NS", "HINDALCO.NS", "JINDALSTEL.NS", "VEDL.NS",
-
-    "ONGC.NS", "IOC.NS", "BPCL.NS", "COALINDIA.NS",
-
-    "SUNPHARMA.NS", "DRREDDY.NS", "CIPLA.NS", "DIVISLAB.NS",
-
-    "HINDUNILVR.NS", "NESTLEIND.NS", "BRITANNIA.NS", "DABUR.NS",
-
-    "ADANIENT.NS", "ADANIPORTS.NS", "LTTS.NS", "IDEA.NS",
-    "ZOMATO.BO", "PAYTM.NS", "NYKAA.NS"
-]
-
-INTERVAL = "5m"
-PERIOD = "5d"
-
-
-# ===============================
-# CORE PROCESSING FUNCTION
-# ===============================
-def process_stock(symbol):
-
-    try:
-        df = get_market_data(symbol=symbol, interval=INTERVAL, period=PERIOD)
-
-        if df is None or df.empty:
-            return None
-
-        df = create_features(df)
-        df = detect_all(df)
-        signal = generate_signal(df)
-
-        if signal not in ["BUY", "SELL"]:
-            return None
-
-        return (symbol, signal)
-
-    except:
-        return None
-
-
-# ===============================
-# MAIN EXECUTION
-# ===============================
 if __name__ == "__main__":
-
-    results = []
-
-    for stock in WATCHLIST:
-        result = process_stock(stock)
-
-        if result:
-            results.append(result)
-
-        time.sleep(0.3)
-
-    # ===============================
-    # FINAL OUTPUT ONLY (CLEAN)
-    # ===============================
-    if results:
-        for symbol, signal in results:
-            print(f"{symbol} → {signal}")
-    else:
-        print("No BUY/SELL signals found")
+    scan()
