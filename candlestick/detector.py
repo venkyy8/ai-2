@@ -1,24 +1,37 @@
 from candlestick.patterns import *
 
+
 def detect_all(candles):
+    candles = candles.copy()
+
+    # normalize column names (IMPORTANT FIX)
+    candles.columns = [col.lower() for col in candles.columns]
+
     latest = candles.iloc[-1]
     previous = candles.iloc[-2]
 
     patterns = []
 
-    if detect_doji(latest.Open, latest.Close, latest.High, latest.Low):
+    # DOJI
+    if detect_doji(latest["open"], latest["close"], latest["high"], latest["low"]):
         patterns.append("DOJI")
 
-    if detect_marubozu(latest.Open, latest.Close, latest.High, latest.Low):
+    # MARUBOZU
+    if detect_marubozu(latest["open"], latest["close"], latest["high"], latest["low"]):
         patterns.append("MARUBOZU")
 
-    if detect_hammer(latest.Open, latest.Close, latest.High, latest.Low):
+    # HAMMER
+    if detect_hammer(latest["open"], latest["close"], latest["high"], latest["low"]):
         patterns.append("HAMMER")
 
+    # BULLISH ENGULFING
     if detect_bullish_engulfing(
-        previous.Open, previous.Close,
-        latest.Open, latest.Close
+        previous["open"], previous["close"],
+        latest["open"], latest["close"]
     ):
         patterns.append("BULLISH_ENGULFING")
 
-    return patterns
+    # attach result to dataframe (VERY IMPORTANT)
+    candles["patterns"] = ", ".join(patterns) if patterns else "NONE"
+
+    return candles
