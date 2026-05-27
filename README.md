@@ -9,6 +9,10 @@ touch intelligence/risk_engine.py
 touch learning/memory.py
 touch requirements.txt
 
+apt update
+apt install -y python3.14-venv
+python3 --version
+python3 -m venv venv
 
 python3 -m venv venv
 source venv/bin/activate
