@@ -1,18 +1,13 @@
-from intelligence.confidence_engine import calculate_confidence
+def generate_signal(rsi, ema_fast, ema_slow, volume_spike, trend_signal):
 
+    # STRONG BUY SETUP
+    if trend_signal == "BULLISH_CONFIRM":
+        if rsi > 50 and volume_spike:
+            return "BUY", 85
 
-def generate_signal(rsi, ema_fast, ema_slow, volume_spike):
-    confidence = calculate_confidence(
-        rsi,
-        ema_fast,
-        ema_slow,
-        volume_spike
-    )
+    # STRONG SELL SETUP
+    if trend_signal == "BEARISH_CONFIRM":
+        if rsi < 50:
+            return "SELL", 85
 
-    if confidence >= 75:
-        return "BUY", confidence
-
-    if confidence <= 25:
-        return "SELL", confidence
-
-    return "WAIT", confidence
+    return "WAIT", 40
