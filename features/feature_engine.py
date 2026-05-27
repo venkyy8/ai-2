@@ -1,14 +1,25 @@
-
 import pandas as pd
 
 def add_features(df):
     df = df.copy()
 
-    df["returns"] = df["close"].pct_change()
-    df["sma_5"] = df["close"].rolling(5).mean()
-    df["sma_10"] = df["close"].rolling(10).mean()
+    # ---------------- EMA (trend)
+    df["ema_fast"] = df["close"].ewm(span=9, adjust=False).mean()
+    df["ema_slow"] = df["close"].ewm(span=21, adjust=False).mean()
 
-    df["trend"] = (df["sma_5"] > df["sma_10"]).astype(int)
+    # ---------------- RSI (proper + stable)
+    delta = df["close"].diff()
 
+    gain = delta.clip(lower=0).rolling(14).mean()
+    loss = (-delta.clip(upper=0)).rolling(14).mean()
+
+    rs = gain / loss
+    df["rsi"] = 100 - (100 / (1 + rs))
+
+    # ---------------- Volume spike (realistic)
+    df["volume_spike"] = df["volume"] > (df["volume"].rolling(20).mean() * 1.2)
+
+    # ---------------- Clean
     df.dropna(inplace=True)
+
     return df

@@ -1,44 +1,30 @@
-import pandas as pd
+def generate_signal(rsi, ema_fast, ema_slow, volume_spike):
 
+    score = 50
+    ema_diff = ema_fast - ema_slow
 
-def generate_signal(df):
-    """
-    Simple intraday signal engine
-    """
+    # ---------------- RSI filter (stronger)
+    if rsi < 30:
+        score += 20
+    elif rsi > 70:
+        score -= 25
+    elif 45 <= rsi <= 55:
+        score += 5
 
-    df = df.copy()
-
-    close = df["close"]
-
-    # Indicators
-    rsi = compute_rsi(close)
-    ema_fast = close.ewm(span=9).mean()
-    ema_slow = close.ewm(span=21).mean()
-
-    volume_spike = 0
-    if "volume" in df.columns:
-        volume_spike = df["volume"].pct_change().iloc[-1]
-
-    # Latest values
-    rsi_val = rsi.iloc[-1]
-    ema_fast_val = ema_fast.iloc[-1]
-    ema_slow_val = ema_slow.iloc[-1]
-
-    # SIGNAL LOGIC
-    if rsi_val < 30 and ema_fast_val > ema_slow_val:
-        return "BUY"
-
-    elif rsi_val > 70 and ema_fast_val < ema_slow_val:
-        return "SELL"
-
+    # ---------------- Trend filter (important)
+    if ema_diff > 0:
+        score += 15
     else:
-        return "HOLD"
+        score -= 20
 
+    # ---------------- Volume confirmation (soft)
+    if volume_spike:
+        score += 10
 
-def compute_rsi(series, period=14):
-    delta = series.diff()
-    gain = (delta.where(delta > 0, 0)).rolling(period).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(period).mean()
-
-    rs = gain / loss
-    return 100 - (100 / (1 + rs))
+    # ---------------- FINAL DECISION (stricter)
+    if score >= 75:
+        return "BUY", score
+    elif score <= 30:
+        return "SELL", score
+    else:
+        return "HOLD", score
